@@ -1,7 +1,5 @@
 import { Metadata } from 'next';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import BookingForm from '@/components/features/booking/BookingForm';
 
 export const metadata: Metadata = {
   title: 'Book a Service | AhunSera',
@@ -10,39 +8,12 @@ export const metadata: Metadata = {
 
 export default function BookingPage() {
   return (
-    <div className="container mx-auto max-w-2xl p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Book Service</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Service Details</label>
-            <div className="p-4 bg-muted rounded-md text-sm">
-              Selected: Plumbing Repair
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date & Time</label>
-              <Input type="datetime-local" />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Location</label>
-              <Input placeholder="Enter your address" />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Description</label>
-              <Input placeholder="Describe the issue..." />
-            </div>
-          </div>
-
-          <Button className="w-full" size="lg">Confirm Booking</Button>
-        </CardContent>
-      </Card>
+    <div className="container mx-auto max-w-4xl p-6 py-12">
+      <div className="mb-8 text-center space-y-2">
+        <h1 className="text-3xl font-bold">Complete Your Booking</h1>
+        <p className="text-muted-foreground">Fill in the details below to schedule your service.</p>
+      </div>
+      <BookingForm />
     </div>
   );
 }

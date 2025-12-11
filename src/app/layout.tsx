@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import ChatAssistantWidget from "@/components/shared/ChatAssistantWidget";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,7 +22,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          {children}
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <ChatAssistantWidget />
+            <Footer />
+          </div>
         </Providers>
       </body>
     </html>
