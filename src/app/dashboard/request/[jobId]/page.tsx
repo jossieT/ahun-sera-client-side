@@ -8,14 +8,18 @@ export const metadata: Metadata = {
   description: 'View request details',
 };
 
-export default function RequestDetailPage({ params }: { params: { jobId: string } }) {
+import { use } from 'react';
+
+export default function RequestDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
+  const { jobId } = use(params);
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-4">
          <Button variant="ghost" asChild>
           <Link href="/dashboard/requests">← Back</Link>
         </Button>
-        <h1 className="text-2xl font-bold">Request #{params.jobId}</h1>
+        <h1 className="text-2xl font-bold">Request #{jobId}</h1>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

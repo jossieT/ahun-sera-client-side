@@ -7,6 +7,8 @@ import * as z from 'zod';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -43,6 +45,8 @@ type BookingFormValues = z.infer<typeof bookingSchema>;
 export default function BookingForm() {
   const [isLoading, setIsLoading] = useState(false);
 
+  const { user } = useAuth(); // Get user from context
+
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
@@ -55,10 +59,30 @@ export default function BookingForm() {
   });
 
   async function onSubmit(data: BookingFormValues) {
+    if (!user) {
+      toast.error('You must be logged in to book a service');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Correct API endpoint call
-      await axios.post('/api/bookings', data);
+      // Direct Supabase Insert to leverage client-side Auth Scope (RLS)
+      const { error } = await supabase
+        .from('bookings')
+        .insert([
+          {
+            service_type: data.serviceType,
+            description: data.description,
+            location: data.address, // mapping address to location
+            scheduled_at: data.preferredTime,
+            contact_name: data.name,
+            contact_phone: data.phone,
+            status: 'pending',
+            user_id: user.id
+          }
+        ]);
+
+      if (error) throw error;
       
       toast.success('Booking Request Sent!', {
         description: 'We have received your request and will contact you shortly.',
