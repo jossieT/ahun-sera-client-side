@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import BookingModal from '@/components/features/booking/BookingModal';
 
 interface Booking {
   id: string;
@@ -34,6 +35,7 @@ export default function RequestsPage() {
   const [requests, setRequests] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     async function fetchRequests() {
@@ -59,7 +61,7 @@ export default function RequestsPage() {
     }
 
     fetchRequests();
-  }, [user]);
+  }, [user, refreshKey]);
 
   const filteredRequests = requests.filter(
     (req) =>
@@ -82,9 +84,10 @@ export default function RequestsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">My Requests</h1>
           <p className="text-muted-foreground mt-1">Manage and track your service history.</p>
         </div>
-        <Button asChild>
-          <Link href="/book">New Booking</Link>
-        </Button>
+        <BookingModal
+          trigger={<Button>New Booking</Button>}
+          onSuccess={() => setRefreshKey((prev) => prev + 1)}
+        />
       </div>
 
       <div className="flex items-center gap-4">
@@ -114,9 +117,10 @@ export default function RequestsPage() {
                 : 'Book your first service to get started!'}
             </p>
             {!searchQuery && (
-              <Button asChild className="mt-4">
-                <Link href="/book">Book a Service</Link>
-              </Button>
+              <BookingModal
+                trigger={<Button className="mt-4">Book a Service</Button>}
+                onSuccess={() => setRefreshKey((prev) => prev + 1)}
+              />
             )}
           </div>
         </Card>

@@ -17,6 +17,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { formatDistanceToNow } from 'date-fns';
+import BookingModal from '@/components/features/booking/BookingModal';
 
 interface Booking {
   id: string;
@@ -32,6 +33,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ total: 0, active: 0, completed: 0, totalSpent: 0 });
   const [recentActivity, setRecentActivity] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0); // to trigger refresh
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -82,7 +84,7 @@ export default function DashboardPage() {
     }
 
     fetchDashboardData();
-  }, [user]);
+  }, [user, refreshKey]);
 
   const STATS = [
     {
@@ -132,15 +134,15 @@ export default function DashboardPage() {
             Welcome back! Here&apos;s what&apos;s happening today.
           </p>
         </div>
-        <Button
-          asChild
-          className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all"
-        >
-          <Link href="/book" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            New Booking
-          </Link>
-        </Button>
+        <BookingModal
+          trigger={
+            <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">
+              <Plus className="h-4 w-4 mr-2" />
+              New Booking
+            </Button>
+          }
+          onSuccess={() => setRefreshKey((prev) => prev + 1)}
+        />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -224,7 +226,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Promo / Banner Area */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary to-primary/80 text-white p-8 shadow-lg">
+        <div className="relative overflow-hidden rounded-xl bg-linear-to-br from-primary to-primary/80 text-white p-8 shadow-lg">
           <div className="relative z-10 space-y-4">
             <h3 className="text-2xl font-bold">Get 20% off your next cleaning!</h3>
             <p className="text-primary-foreground/90 max-w-sm">
@@ -232,9 +234,14 @@ export default function DashboardPage() {
               <span className="font-mono font-bold bg-white/20 px-2 py-1 rounded">CLEAN20</span>{' '}
               when you book a home cleaning service this week.
             </p>
-            <Button variant="secondary" className="mt-4" asChild>
-              <Link href="/book">Book Now</Link>
-            </Button>
+            <BookingModal
+              trigger={
+                <Button variant="secondary" className="mt-4">
+                  Book Now
+                </Button>
+              }
+              onSuccess={() => setRefreshKey((prev) => prev + 1)}
+            />
           </div>
           {/* Decorative circles */}
           <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
