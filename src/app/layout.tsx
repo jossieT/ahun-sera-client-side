@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from '@/components/providers';
-import Navbar from '@/components/layout/Navbar';
+import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ChatAssistantWidget from '@/components/features/chat/ChatAssistantWidget';
 import { AuthProvider } from '@/context/AuthContext';
@@ -23,7 +23,7 @@ export default function RootLayout({
         <Providers>
           <AuthProvider>
             <div className="flex flex-col min-h-screen">
-              <Navbar />
+              <Header />
               <main className="flex-grow">{children}</main>
               <ChatAssistantWidget />
               <Footer />

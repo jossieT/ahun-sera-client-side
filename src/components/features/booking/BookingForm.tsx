@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import axios from 'axios';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -42,7 +41,12 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
-export default function BookingForm() {
+interface BookingFormProps {
+  onSuccess?: () => void;
+  isModal?: boolean;
+}
+
+export default function BookingForm({ onSuccess, isModal = false }: BookingFormProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const { user } = useAuth(); // Get user from context
@@ -67,27 +71,29 @@ export default function BookingForm() {
     setIsLoading(true);
     try {
       // Direct Supabase Insert to leverage client-side Auth Scope (RLS)
-      const { error } = await supabase
-        .from('bookings')
-        .insert([
-          {
-            service_type: data.serviceType,
-            description: data.description,
-            location: data.address, // mapping address to location
-            scheduled_at: data.preferredTime,
-            contact_name: data.name,
-            contact_phone: data.phone,
-            status: 'pending',
-            user_id: user.id
-          }
-        ]);
+      const { error } = await supabase.from('bookings').insert([
+        {
+          service_type: data.serviceType,
+          description: data.description,
+          location: data.address, // mapping address to location
+          scheduled_at: data.preferredTime,
+          contact_name: data.name,
+          contact_phone: data.phone,
+          status: 'pending',
+          user_id: user.id,
+        },
+      ]);
 
       if (error) throw error;
-      
+
       toast.success('Booking Request Sent!', {
         description: 'We have received your request and will contact you shortly.',
       });
       form.reset();
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error('Booking Error:', error);
       toast.error('Booking Failed', {
@@ -96,6 +102,135 @@ export default function BookingForm() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (isModal) {
+    return (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Name Field */}
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Abebe Kebede" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Phone Field */}
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+251 911 234 567" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Address Field */}
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="Bole, Addis Ababa" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Service Type Dropdown */}
+            <FormField
+              control={form.control}
+              name="serviceType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Service Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a service" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="plumbing">Plumbing</SelectItem>
+                      <SelectItem value="electrical">Electrical</SelectItem>
+                      <SelectItem value="cleaning">Cleaning</SelectItem>
+                      <SelectItem value="painting">Painting</SelectItem>
+                      <SelectItem value="moving">Moving</SelectItem>
+                      <SelectItem value="repair">General Repair</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Preferred Time */}
+            <FormField
+              control={form.control}
+              name="preferredTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preferred Date & Time</FormLabel>
+                  <FormControl>
+                    <Input type="datetime-local" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Description Field */}
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Job Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Describe the issue or task in detail..."
+                    className="min-h-[100px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit" className="w-full text-lg h-12" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting Request...
+              </>
+            ) : (
+              'Submit Booking Request'
+            )}
+          </Button>
+        </form>
+      </Form>
+    );
   }
 
   return (
@@ -109,7 +244,6 @@ export default function BookingForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Name Field */}
               <FormField
@@ -209,10 +343,10 @@ export default function BookingForm() {
                 <FormItem>
                   <FormLabel>Job Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Describe the issue or task in detail..." 
+                    <Textarea
+                      placeholder="Describe the issue or task in detail..."
                       className="min-h-[100px]"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
