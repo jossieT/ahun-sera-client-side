@@ -4,6 +4,7 @@ import { Wrench, Zap, Paintbrush, Home as HomeIcon, ArrowRight } from 'lucide-re
 import CategoryCard from '@/components/features/services/CategoryCard';
 import ServiceCard from '@/components/features/services/ServiceCard';
 import Hero from '@/components/layout/Hero';
+import ProfessionalCTA from '@/components/layout/ProfessionalCTA';
 
 export default function Home() {
   const categories = [
@@ -45,26 +46,36 @@ export default function Home() {
     {
       id: 101,
       title: 'Emergency Pipe Repair',
-      description: 'Fixing burst pipes and leaks immediately.',
+      description:
+        'Expert fixing of burst pipes, leaks, and urgent plumbing issues with 1-hour response time.',
       price: 500,
       rating: 4.8,
-      reviewsCount: 120,
+      reviewsCount: 124,
+      imageUrl: '/images/ethiopian-plumber-hero.png', // Using existing asset
+      isPopular: true,
+      bookedThisWeek: 42,
     },
     {
       id: 102,
-      title: 'Full Home Cleaning',
-      description: 'Comprehensive cleaning for 2-bedroom apartments.',
-      price: 1200,
+      title: 'Post-Construction Cleaning',
+      description: 'Deep, comprehensive cleaning for newly built or renovated homes and offices.',
+      price: 1500,
       rating: 4.9,
-      reviewsCount: 85,
+      reviewsCount: 96,
+      imageUrl: '/images/ethiopian-plumber-hero.png',
+      bookedThisWeek: 28,
     },
     {
       id: 103,
-      title: 'Electrical Socket Fix',
-      description: 'Repairing or replacing faulty power outlets.',
-      price: 300,
+      title: 'Full Home Electrical Audit',
+      description:
+        'Comprehensive safety check and repair of all electrical points and wiring systems.',
+      price: 800,
       rating: 4.7,
-      reviewsCount: 45,
+      reviewsCount: 65,
+      imageUrl: '/images/ethiopian-plumber-hero.png',
+      isPopular: true,
+      bookedThisWeek: 15,
     },
   ];
 
@@ -116,37 +127,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Services Section */}
-      <section className="py-16 px-6 container mx-auto bg-light-background/50 rounded-3xl my-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-2 text-dark-text">Featured Services</h2>
-          <p className="text-medium-text">Top-rated services booked by others</p>
+      <section className="py-24 px-6 container mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+          <div className="max-w-xl">
+            <h2 className="text-4xl md:text-5xl font-black mb-4 text-dark-text tracking-tight">
+              Featured <span className="text-action-orange">Services</span>
+            </h2>
+            <p className="text-lg text-medium-text">
+              Top-rated experts recommended by the community for quality and reliability.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            asChild
+            className="rounded-full px-8 py-6 border-slate-200 text-slate-600 hover:text-primary-blue hover:border-primary-blue font-bold"
+          >
+            <Link href="/services">View All Services</Link>
+          </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {featuredServices.map((service) => (
             <ServiceCard key={service.id} {...service} />
           ))}
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-6 bg-primary-blue text-white text-center">
-        <div className="max-w-3xl mx-auto space-y-6">
-          <h2 className="text-3xl font-bold">Are you a skilled professional?</h2>
-          <p className="text-white/90 text-lg">
-            Join AhunSera today and start earning by offering your services to thousands of
-            customers.
-          </p>
-          <Button
-            variant="secondary"
-            size="lg"
-            asChild
-            className="bg-white text-primary-blue hover:bg-gray-100"
-          >
-            <Link href="/register?type=tasker">Become a Tasker</Link>
-          </Button>
-        </div>
-      </section>
+      {/* Professional CTA Section */}
+      <ProfessionalCTA />
     </div>
   );
 }
