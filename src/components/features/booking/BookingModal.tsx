@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,16 @@ export default function BookingModal({
   title = 'Book a Service',
 }: BookingModalProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Wait for mount to avoid hydration mismatch on generated IDs
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return <>{trigger}</>;
+  }
 
   const handleSuccess = () => {
     setIsOpen(false);

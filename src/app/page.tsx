@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search, Wrench, Zap, Paintbrush, Home as HomeIcon } from 'lucide-react';
+import { Wrench, Zap, Paintbrush, Home as HomeIcon } from 'lucide-react';
 import CategoryCard from '@/components/features/services/CategoryCard';
 import ServiceCard from '@/components/features/services/ServiceCard';
+import Hero from '@/components/layout/Hero';
 
 export default function Home() {
   const categories = [
@@ -47,31 +47,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
-      <section className="bg-light-background py-20 px-6 text-center">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-dark-text">
-            Find Trusted Professionals for Every Task
-          </h1>
-          <p className="text-lg text-medium-text max-w-2xl mx-auto">
-            From home repairs to cleaning, AhunSera connects you with skilled experts in Ethiopia
-            instantly.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto mt-8">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-medium-text" />
-              <Input
-                placeholder="What do you need help with?"
-                className="pl-10 h-11 bg-white border-border"
-              />
-            </div>
-            <Button size="lg" className="h-11 bg-primary-blue hover:bg-[#1E4AE8] text-white">
-              Search
-            </Button>
-          </div>
-        </div>
-      </section>
+      <Hero />
 
       {/* Categories Section */}
       <section className="py-16 px-6 container mx-auto">
