@@ -1,20 +1,43 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Wrench, Zap, Paintbrush, Home as HomeIcon } from 'lucide-react';
+import { Wrench, Zap, Paintbrush, Home as HomeIcon, ArrowRight } from 'lucide-react';
 import CategoryCard from '@/components/features/services/CategoryCard';
 import ServiceCard from '@/components/features/services/ServiceCard';
 import Hero from '@/components/layout/Hero';
 
 export default function Home() {
   const categories = [
-    { id: 1, name: 'Plumbing', description: 'Leak repairs, pipe fitting, and more.', icon: Wrench },
-    { id: 2, name: 'Electrical', description: 'Wiring, installations, and repairs.', icon: Zap },
-    { id: 3, name: 'Cleaning', description: 'Home, office, and deep cleaning.', icon: HomeIcon },
+    {
+      id: 1,
+      name: 'Plumbing',
+      description: 'Expert leak repairs, pipe fitting, and bathroom installations.',
+      icon: Wrench,
+      colorVariant: 'blue' as const,
+      count: 124,
+    },
+    {
+      id: 2,
+      name: 'Electrical',
+      description: 'Professional wiring, safe installations, and circuit repairs.',
+      icon: Zap,
+      colorVariant: 'orange' as const,
+      count: 86,
+    },
+    {
+      id: 3,
+      name: 'Cleaning',
+      description: 'Complete home, office, and specialized deep cleaning services.',
+      icon: HomeIcon,
+      colorVariant: 'green' as const,
+      count: 242,
+    },
     {
       id: 4,
       name: 'Painting',
-      description: 'Interior and exterior painting services.',
+      description: 'High-quality interior, exterior, and decorative painting.',
       icon: Paintbrush,
+      colorVariant: 'purple' as const,
+      count: 65,
     },
   ];
 
@@ -50,20 +73,46 @@ export default function Home() {
       <Hero />
 
       {/* Categories Section */}
-      <section className="py-16 px-6 container mx-auto">
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h2 className="text-3xl font-bold mb-2 text-dark-text">Popular Categories</h2>
-            <p className="text-medium-text">Browse services by category</p>
-          </div>
-          <Link href="/categories" className="text-primary-blue font-medium hover:underline">
-            View All
-          </Link>
+      <section className="py-24 px-6 container mx-auto">
+        <div className="text-center max-w-2xl mx-auto mb-16 underline-offset-8">
+          <h2 className="text-4xl md:text-5xl font-black mb-4 text-dark-text tracking-tight">
+            Popular <span className="text-primary-blue">Categories</span>
+          </h2>
+          <p className="text-lg text-medium-text">
+            Connect with the best home service professionals in your area.
+          </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {categories.map((cat) => (
             <CategoryCard key={cat.id} {...cat} />
           ))}
+
+          {/* View All / Explore More Card */}
+          <Link
+            href="/categories"
+            className="md:col-span-2 group relative overflow-hidden rounded-3xl bg-dark-text p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary-blue/20"
+          >
+            <div className="relative z-10 text-center md:text-left">
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                Need something else?
+              </h3>
+              <p className="text-white/70 text-lg">
+                Explore our full list of 50+ service categories and find exactly what you need.
+              </p>
+            </div>
+            <Button
+              size="lg"
+              className="relative z-10 bg-primary-blue text-white rounded-full px-8 py-6 text-lg font-bold group-hover:scale-105 transition-transform"
+            >
+              View All Categories
+              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </Button>
+
+            {/* Dark background accent */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-blue/10 rounded-full blur-3xl -mr-20 -mt-20" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-deep-teal/10 rounded-full blur-3xl -ml-20 -mb-20" />
+          </Link>
         </div>
       </section>
 
