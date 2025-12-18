@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, Search, LogOut, User, Settings, LayoutDashboard } from 'lucide-react';
+import { Menu, Search, LogOut, User, Settings, LayoutDashboard, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
@@ -122,20 +122,28 @@ export default function Header() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="relative h-10 w-10 rounded-full p-0 overflow-hidden border-2 border-white shadow-sm hover:border-primary-blue transition-colors"
-                    >
-                      <Avatar className="h-full w-full">
-                        <AvatarImage
-                          src={user.user_metadata?.avatar_url}
-                          alt={user.email || 'User'}
-                        />
-                        <AvatarFallback className="bg-linear-to-br from-primary-blue to-deep-teal text-white font-bold">
-                          {getUserInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
+                    <button className="flex items-center gap-2.5 py-1.5 px-2 rounded-full hover:bg-light-background/80 transition-all duration-300 group focus:outline-none">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-8 w-8 ring-1 ring-border/50 group-hover:ring-primary-blue/30 transition-all">
+                          <AvatarImage
+                            src={user.user_metadata?.avatar_url}
+                            alt={user.email || 'User'}
+                          />
+                          <AvatarFallback className="bg-slate-100 text-slate-500 text-[10px] font-bold">
+                            {getUserInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="hidden md:flex flex-col items-start leading-none gap-0.5">
+                          <span className="text-[10px] font-bold text-medium-text/50 uppercase tracking-widest">
+                            Account
+                          </span>
+                          <span className="text-sm font-medium text-medium-text group-hover:text-dark-text transition-colors">
+                            {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                          </span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-medium-text/40 group-hover:text-primary-blue transition-colors ml-0.5" />
+                      </div>
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
@@ -215,6 +223,60 @@ export default function Header() {
                     </Link>
                   ))}
 
+                  {user && (
+                    <div className="flex flex-col gap-4 mt-6 border-t border-border pt-6">
+                      <div className="flex items-center gap-3 px-3 py-3 bg-light-background rounded-2xl border border-border/50">
+                        <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
+                          <AvatarImage src={user.user_metadata?.avatar_url} />
+                          <AvatarFallback className="bg-primary-blue/10 text-primary-blue font-bold text-lg">
+                            {getUserInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-dark-text">Account Settings</span>
+                          <span className="text-xs text-medium-text truncate max-w-[180px]">
+                            {user.email}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Link
+                          href="/dashboard"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="flex items-center gap-3 text-lg font-medium text-dark-text hover:text-primary-blue py-3 px-2 rounded-xl hover:bg-light-background transition-colors"
+                        >
+                          <LayoutDashboard className="h-5 w-5 text-medium-text" />
+                          Dashboard
+                        </Link>
+                        <Link
+                          href="/dashboard/profile"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="flex items-center gap-3 text-lg font-medium text-dark-text hover:text-primary-blue py-3 px-2 rounded-xl hover:bg-light-background transition-colors"
+                        >
+                          <User className="h-5 w-5 text-medium-text" />
+                          My Profile
+                        </Link>
+                        <Link
+                          href="/settings"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="flex items-center gap-3 text-lg font-medium text-dark-text hover:text-primary-blue py-3 px-2 rounded-xl hover:bg-light-background transition-colors"
+                        >
+                          <Settings className="h-5 w-5 text-medium-text" />
+                          Settings
+                        </Link>
+                        <button
+                          onClick={() => {
+                            handleLogout();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="flex items-center gap-3 text-lg font-medium text-red-600 py-3 px-2 hover:bg-red-50 rounded-xl transition-colors text-left w-full mt-2"
+                        >
+                          <LogOut className="h-5 w-5" />
+                          Log Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {!user && (
                     <div className="flex flex-col gap-3 mt-4">
                       <Button
