@@ -4,6 +4,7 @@ import { Wrench, Zap, Paintbrush, Home as HomeIcon, ArrowRight } from 'lucide-re
 import CategoryCard from '@/components/features/services/CategoryCard';
 import ServiceCard from '@/components/features/services/ServiceCard';
 import Hero from '@/components/layout/Hero';
+import ProfessionalCTA from '@/components/layout/ProfessionalCTA';
 
 export default function Home() {
   const categories = [
@@ -61,8 +62,7 @@ export default function Home() {
       price: 1500,
       rating: 4.9,
       reviewsCount: 96,
-      imageUrl:
-        'https://images.unsplash.com/photo-1581578731548-c64695cc6954?auto=format&fit=crop&q=80&w=800',
+      imageUrl: '/images/ethiopian-plumber-hero.png',
       bookedThisWeek: 28,
     },
     {
@@ -73,8 +73,7 @@ export default function Home() {
       price: 800,
       rating: 4.7,
       reviewsCount: 65,
-      imageUrl:
-        'https://images.unsplash.com/photo-1621905252507-b354bcadcabc?auto=format&fit=crop&q=80&w=800',
+      imageUrl: '/images/ethiopian-plumber-hero.png',
       isPopular: true,
       bookedThisWeek: 15,
     },
@@ -154,24 +153,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-6 bg-primary-blue text-white text-center">
-        <div className="max-w-3xl mx-auto space-y-6">
-          <h2 className="text-3xl font-bold">Are you a skilled professional?</h2>
-          <p className="text-white/90 text-lg">
-            Join AhunSera today and start earning by offering your services to thousands of
-            customers.
-          </p>
-          <Button
-            variant="secondary"
-            size="lg"
-            asChild
-            className="bg-white text-primary-blue hover:bg-gray-100"
-          >
-            <Link href="/register?type=tasker">Become a Tasker</Link>
-          </Button>
-        </div>
-      </section>
+      {/* Professional CTA Section */}
+      <ProfessionalCTA />
     </div>
   );
 }
