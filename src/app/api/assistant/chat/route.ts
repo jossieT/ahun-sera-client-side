@@ -55,19 +55,36 @@ async function generateAIResponse(
   try {
     const contextualSystemPrompt = SYSTEM_PROMPT + '\n' + getContextualPrompt(context);
 
-    // Format history for the new SDK
-    // @google/genai typically uses a slightly different structure or allows passing it in contents
-    const contents = [
-      ...history.map((msg) => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }],
-      })),
-      { role: 'user', parts: [{ text: message }] },
-    ];
+    // 1. Combine history and current message
+    const allMessages = [...history, { role: 'user', content: message }];
 
-    // Check if we need to filter history to start with 'user'
-    const firstUserIndex = contents.findIndex((c) => c.role === 'user');
-    const validContents = firstUserIndex !== -1 ? contents.slice(firstUserIndex) : contents;
+    // 2. Filter history:
+    // - Must start with 'user'
+    // - Must alternate User -> Assistant -> User ...
+    // - Skip empty content
+    const validContents: any[] = [];
+    let lastRole: string | null = null;
+
+    for (const msg of allMessages) {
+      if (!msg.content || msg.content.trim() === '') continue;
+
+      const role = msg.role === 'user' ? 'user' : 'model';
+
+      // Ensure we start with 'user'
+      if (validContents.length === 0 && role !== 'user') continue;
+
+      // Ensure alternating roles (merge or skip if same role consecutively)
+      if (role === lastRole) {
+        // Option A: Append to last message parts (Gemini supports multiple parts)
+        validContents[validContents.length - 1].parts.push({ text: msg.content });
+      } else {
+        validContents.push({
+          role: role,
+          parts: [{ text: msg.content }],
+        });
+        lastRole = role;
+      }
+    }
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
