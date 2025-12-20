@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { SYSTEM_PROMPT, getContextualPrompt } from '@/lib/assistant/prompt';
 
-// Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+// Initialize the new Google Gen AI client
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || '',
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
       console.warn('GEMINI_API_KEY is not set');
     }
 
-    // Generate AI response with context
+    // Generate AI response with context using the new SDK
     const response = await generateAIResponse(message, history || [], context || {});
 
     return NextResponse.json({
@@ -52,28 +53,47 @@ async function generateAIResponse(
   context: ChatContext,
 ): Promise<string> {
   try {
-    // Start a chat session or just send a single prompt with context
-    // For simplicity and better control over context, we combine EVERYTHING into a single prompt session if it's the first message,
-    // or use the history if available.
-
     const contextualSystemPrompt = SYSTEM_PROMPT + '\n' + getContextualPrompt(context);
 
-    const chat = model.startChat({
-      history: history.map((msg) => ({
+    // Format history for the new SDK
+    // @google/genai typically uses a slightly different structure or allows passing it in contents
+    const contents = [
+      ...history.map((msg) => ({
         role: msg.role === 'user' ? 'user' : 'model',
         parts: [{ text: msg.content }],
       })),
-      generationConfig: {
-        maxOutputTokens: 500,
-      },
-      systemInstruction: contextualSystemPrompt,
+      { role: 'user', parts: [{ text: message }] },
+    ];
+
+    // Check if we need to filter history to start with 'user'
+    const firstUserIndex = contents.findIndex((c) => c.role === 'user');
+    const validContents = firstUserIndex !== -1 ? contents.slice(firstUserIndex) : contents;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: validContents,
+      config: {
+        systemInstruction: contextualSystemPrompt,
+        maxOutputTokens: 1000,
+      } as { systemInstruction?: string; maxOutputTokens?: number },
     });
 
-    const result = await chat.sendMessage(message);
-    const response = await result.response;
-    return response.text();
-  } catch (error) {
+    return response.text || "I'm sorry, I couldn't generate a response.";
+  } catch (error: unknown) {
     console.error('Gemini API error:', error);
+
+    // Check for rate limit error
+    const isRateLimit =
+      (error &&
+        typeof error === 'object' &&
+        'status' in error &&
+        (error as { status: number }).status === 429) ||
+      (error instanceof Error && error.message?.includes('429'));
+
+    if (isRateLimit) {
+      return "I'm receiving too many requests right now. Please wait a few seconds and try again. (Gemini Rate Limit)";
+    }
+
     return "I'm sorry, I'm having trouble thinking right now. Could you please try again later?";
   }
 }
