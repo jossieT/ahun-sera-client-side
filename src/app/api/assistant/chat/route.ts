@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { SYSTEM_PROMPT, getContextualPrompt } from '@/lib/assistant/prompt';
+
+// Initialize Gemini API
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, history } = body;
+    const { message, history, context } = body;
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    // Simulate AI response (replace with actual AI API call)
-    const response = await generateAIResponse(message, history);
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn('GEMINI_API_KEY is not set');
+    }
+
+    // Generate AI response with context
+    const response = await generateAIResponse(message, history || [], context || {});
 
     return NextResponse.json({
       message: response,
@@ -22,63 +32,48 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Simulated AI response generator
-// Replace this with actual AI API (OpenAI, Anthropic, etc.)
-async function generateAIResponse(message: string, history: any[]): Promise<string> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
-  const lowerMessage = message.toLowerCase();
+interface ChatContext {
+  userName?: string;
+  currentPage?: string;
+  activeBookings?: Array<{
+    type: string;
+    status: string;
+  }>;
+}
 
-  // Simple keyword-based responses
-  if (lowerMessage.includes('book') || lowerMessage.includes('service')) {
-    return 'I can help you book a service! We offer home cleaning, plumbing, electrical work, painting, and more. What type of service are you looking for?';
+async function generateAIResponse(
+  message: string,
+  history: Message[],
+  context: ChatContext,
+): Promise<string> {
+  try {
+    // Start a chat session or just send a single prompt with context
+    // For simplicity and better control over context, we combine EVERYTHING into a single prompt session if it's the first message,
+    // or use the history if available.
+
+    const contextualSystemPrompt = SYSTEM_PROMPT + '\n' + getContextualPrompt(context);
+
+    const chat = model.startChat({
+      history: history.map((msg) => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }],
+      })),
+      generationConfig: {
+        maxOutputTokens: 500,
+      },
+      systemInstruction: contextualSystemPrompt,
+    });
+
+    const result = await chat.sendMessage(message);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Gemini API error:', error);
+    return "I'm sorry, I'm having trouble thinking right now. Could you please try again later?";
   }
-
-  if (
-    lowerMessage.includes('price') ||
-    lowerMessage.includes('cost') ||
-    lowerMessage.includes('how much')
-  ) {
-    return "Our pricing varies by service type and location. For accurate pricing, please visit our booking page and select your desired service. You'll get an instant quote!";
-  }
-
-  if (lowerMessage.includes('clean')) {
-    return 'Our home cleaning service includes deep cleaning, regular maintenance, and we use eco-friendly products. Would you like to book a cleaning service?';
-  }
-
-  if (lowerMessage.includes('plumb')) {
-    return 'We offer expert plumbing services including leak repairs, pipe installation, and emergency services. Our plumbers are licensed and experienced.';
-  }
-
-  if (lowerMessage.includes('electric')) {
-    return 'Our electrical services cover wiring, fixture installation, and safety inspections. All our electricians are licensed professionals.';
-  }
-
-  if (lowerMessage.includes('help') || lowerMessage.includes('support')) {
-    return "I'm here to help! You can ask me about:\n- Available services\n- Booking process\n- Pricing information\n- Service areas\n- Account management\n\nWhat would you like to know?";
-  }
-
-  if (
-    lowerMessage.includes('hello') ||
-    lowerMessage.includes('hi') ||
-    lowerMessage.includes('hey')
-  ) {
-    return 'Hello! Welcome to AhunSera. How can I assist you today?';
-  }
-
-  if (lowerMessage.includes('thank')) {
-    return "You're welcome! Is there anything else I can help you with?";
-  }
-
-  if (lowerMessage.includes('cancel') || lowerMessage.includes('refund')) {
-    return 'For cancellations and refunds, please visit your dashboard and go to "My Requests". You can manage your bookings there. If you need further assistance, our support team is available 24/7.';
-  }
-
-  // Default response
-  return (
-    'I understand you\'re asking about "' +
-    message +
-    '". Could you please provide more details? Or you can ask me about our services, booking process, or pricing.'
-  );
 }

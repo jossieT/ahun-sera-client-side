@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { usePathname } from 'next/navigation';
+import { supabase } from '@/lib/supabaseClient';
 
 interface Message {
   id: string;
@@ -15,6 +18,13 @@ interface Message {
 
 const STORAGE_KEY = 'ahun-sera-chat-messages';
 
+const SUGGESTED_ACTIONS = [
+  { label: 'How it works?', message: 'How does AhunSera work?' },
+  { label: 'Pricing', message: 'What are your service prices?' },
+  { label: 'My Bookings', message: 'Can you show me my recent bookings?' },
+  { label: 'Cleaning service', message: 'I need a cleaning service' },
+];
+
 export default function ChatAssistantWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -22,6 +32,11 @@ export default function ChatAssistantWidget() {
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const pathname = usePathname();
+  const [activeBookings, setActiveBookings] = useState<
+    Array<{ service_type: string; status: string }>
+  >([]);
 
   // Load messages from localStorage on mount
   useEffect(() => {
@@ -44,12 +59,30 @@ export default function ChatAssistantWidget() {
         {
           id: '1',
           role: 'assistant',
-          content: "Hello! I'm your AhunSera assistant. How can I help you today?",
+          content: `Hello${
+            user?.user_metadata?.full_name ? ` ${user.user_metadata.full_name}` : ''
+          }! I'm your AhunSera assistant. How can I help you today?`,
           timestamp: new Date(),
         },
       ]);
     }
-  }, []);
+  }, [user]);
+
+  // Fetch active bookings for context
+  useEffect(() => {
+    if (user) {
+      const fetchBookings = async () => {
+        const { data } = await supabase
+          .from('bookings')
+          .select('service_type, status')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3);
+        if (data) setActiveBookings(data);
+      };
+      fetchBookings();
+    }
+  }, [user]);
 
   // Save messages to localStorage whenever they change
   useEffect(() => {
@@ -63,22 +96,18 @@ export default function ChatAssistantWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isSending) return;
+  const handleSendMessage = async (customMessage?: string) => {
+    const textToSend = customMessage || inputValue.trim();
+    if (!textToSend || isSending) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: inputValue.trim(),
+      content: textToSend,
       timestamp: new Date(),
     };
 
-    console.log('Sending message:', userMessage);
-    setMessages((prev) => {
-      const updated = [...prev, userMessage];
-      console.log('Updated messages:', updated);
-      return updated;
-    });
+    setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
     setIsSending(true);
     setIsTyping(true);
@@ -91,7 +120,12 @@ export default function ChatAssistantWidget() {
         },
         body: JSON.stringify({
           message: userMessage.content,
-          history: messages.slice(-10), // Send last 10 messages for context
+          history: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+          context: {
+            userName: user?.user_metadata?.full_name,
+            currentPage: pathname,
+            activeBookings: activeBookings.map((b) => ({ type: b.service_type, status: b.status })),
+          },
         }),
       });
 
@@ -108,7 +142,6 @@ export default function ChatAssistantWidget() {
         timestamp: new Date(),
       };
 
-      console.log('Received response:', assistantMessage);
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Chat error:', error);
@@ -238,6 +271,22 @@ export default function ChatAssistantWidget() {
                 </div>
               ))}
 
+              {/* Suggested Actions */}
+              {messages.length === 1 && (
+                <div className="flex flex-wrap gap-2 mt-2 px-1">
+                  {SUGGESTED_ACTIONS.map((action) => (
+                    <button
+                      key={action.label}
+                      onClick={() => handleSendMessage(action.message)}
+                      className="text-xs bg-white border border-gray-200 hover:border-primary hover:text-primary px-3 py-1.5 rounded-full transition-all duration-200 shadow-sm flex items-center gap-1.5"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Typing Indicator */}
               {isTyping && (
                 <div className="chat-message chat-message-assistant">
@@ -265,7 +314,7 @@ export default function ChatAssistantWidget() {
                 className="chat-input"
               />
               <Button
-                onClick={handleSendMessage}
+                onClick={() => handleSendMessage()}
                 disabled={!inputValue.trim() || isSending}
                 size="icon"
                 className="chat-send-button"
